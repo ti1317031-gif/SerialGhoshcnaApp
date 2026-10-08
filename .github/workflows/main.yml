@@ -1,0 +1,40 @@
+name: Build Serial Ghoshona APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Extract project ZIP
+        run: |
+          unzip -o SerialGhoshonaApp_GitHubBuild.zip -d project
+
+      - name: Find Android project
+        run: |
+          echo "Searching for Gradle project..."
+          find project -name settings.gradle -o -name settings.gradle.kts
+
+      - name: Build APK
+        run: |
+          PROJECT_DIR=$(dirname "$(find project -name settings.gradle -o -name settings.gradle.kts | head -1)")
+          echo "Project directory: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
+
+          if [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew assembleDebug
+          else
+            gradle assembleDebug
+          fi
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serial-Ghoshona-APK
+          path: project/**/build/outputs/apk/debug/*.apk
